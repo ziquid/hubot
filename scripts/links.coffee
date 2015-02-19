@@ -15,9 +15,6 @@
 # Author
 #   mm53bar
 
-# from http://stackoverflow.com/questions/4825812/clean-way-to-remove-element-from-javascript-array-with-jquery-coffeescript
-Array::remove = (e) -> @[t..t] = [] if (t = @indexOf(e)) > -1
-
 module.exports = (robot) ->
   robot.respond /link (http(s?)\:\/\/\S+) as (.+)/i, (msg) ->
     url = msg.match[1]
@@ -31,7 +28,7 @@ module.exports = (robot) ->
       else
         msg.reply "I've stuck that link into my robot brain."
 
-  robot.respond /unlink (http(s?)\:\/\/\S+) as (.+)/i, (msg) ->
+  robot.respond /unlink (http(s?)\:\/\/\S+) from (.+)/i, (msg) ->
     url = msg.match[1]
     description = msg.match[3]
     bookmark = new Bookmark url, description
@@ -39,9 +36,9 @@ module.exports = (robot) ->
 
     link.del bookmark, (err, message) ->
       if err?
-        msg.reply "I could not find that link!"
+        msg.reply "I could not find that link! " + err
       else
-        msg.reply "I've removed that link from my robot brain."
+        msg.reply "I've removed that link from my robot brain. " + message
 
   robot.respond /link me for (.+)/i, (msg) ->
     description = msg.match[1]
@@ -62,13 +59,13 @@ module.exports = (robot) ->
       else
         msg.reply message
 
-  robot.hear /(http(s?)\:\/\/\S+)/i, (msg) ->
-    href = msg.match[1]
-    url = new Url robot
-
-    url.add href, (err, message) ->
-      if err?
-        console.log "#{href} : #{err}"
+#  robot.hear /(http(s?)\:\/\/\S+)/i, (msg) ->
+#    href = msg.match[1]
+#    url = new Url robot
+#
+#    url.add href, (err, message) ->
+#      if err?
+#        console.log "#{href} : #{err}"
 
 # Classes
 
@@ -92,7 +89,7 @@ class Url
 
   del: (url, callback) ->
     if url in @all()
-      $urls_.remove url
+# FIXME jwc 19Feb2015     @urls_.remove url
       callback null, "URL deleted"
     else
       callback "URL doesn't exist"
@@ -110,6 +107,7 @@ class Bookmark
 
 class Link
   constructor: (robot) ->
+    @robot_ ?= robot
     robot.brain.data.links ?= []
     @links_ = robot.brain.data.links
 
@@ -138,7 +136,8 @@ class Link
         if entry.url is bookmark.url
           result.push bookmark
     if result.length > 0
-      @links_.remove bookmark
+      @links_ = (x for x in @links_ when x.url != bookmark.url)
+      @robot_.brain.data.links = @links_ # ??? why ??? jwc 19Feb2015
       callback null, "Bookmark deleted"
     else
       callback "Bookmark does not exist"

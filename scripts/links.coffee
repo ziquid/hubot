@@ -8,7 +8,7 @@
 #
 # Commands:
 #   hubot link <url> as <description> - add a url to the robot brain
-#   hubot unlink <url> as <description> - remove a url from the robot brain
+#   hubot unlink <url> from <description> - remove a url from the robot brain
 #   hubot link me for <description> - find a link by description
 #   hubot links - List all of the links that are being tracked
 #

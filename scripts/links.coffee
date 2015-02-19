@@ -8,11 +8,15 @@
 #
 # Commands:
 #   hubot link <url> as <description> - add a url to the robot brain
+#   hubot unlink <url> as <description> - remove a url from the robot brain
 #   hubot link me for <description> - find a link by description
 #   hubot links - List all of the links that are being tracked
 #
 # Author
 #   mm53bar
+
+# from http://stackoverflow.com/questions/4825812/clean-way-to-remove-element-from-javascript-array-with-jquery-coffeescript
+Array::remove = (e) -> @[t..t] = [] if (t = @indexOf(e)) > -1
 
 module.exports = (robot) ->
   robot.respond /link (http(s?)\:\/\/\S+) as (.+)/i, (msg) ->
@@ -26,6 +30,18 @@ module.exports = (robot) ->
         msg.reply "I have a vague memory of hearing about that link sometime in the past."
       else
         msg.reply "I've stuck that link into my robot brain."
+
+  robot.respond /unlink (http(s?)\:\/\/\S+) as (.+)/i, (msg) ->
+    url = msg.match[1]
+    description = msg.match[3]
+    bookmark = new Bookmark url, description
+    link = new Link robot
+
+    link.del bookmark, (err, message) ->
+      if err?
+        msg.reply "I could not find that link!"
+      else
+        msg.reply "I've removed that link from my robot brain."
 
   robot.respond /link me for (.+)/i, (msg) ->
     description = msg.match[1]
@@ -74,6 +90,13 @@ class Url
       @all url
       callback null, "URL added"
 
+  del: (url, callback) ->
+    if url in @all()
+      $urls_.remove url
+      callback null, "URL deleted"
+    else
+      callback "URL doesn't exist"
+
 class Bookmark
   constructor: (url, description) ->
     @url = url
@@ -107,6 +130,18 @@ class Link
     else
       @all bookmark
       callback null, "Bookmark added"
+
+  del: (bookmark, callback) ->
+    result = []
+    @all().forEach (entry) ->
+      if entry
+        if entry.url is bookmark.url
+          result.push bookmark
+    if result.length > 0
+      @links_.remove bookmark
+      callback null, "Bookmark deleted"
+    else
+      callback "Bookmark does not exist"
 
   list: (callback) ->
     if @all().length > 0

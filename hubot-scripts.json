@@ -1,4 +1,5 @@
 [
-  "drupal-org.coffee",
-  "git-help.coffee"
+  "drupalorg.coffee",
+  "git-help.coffee",
+  "links.coffee"
 ]
